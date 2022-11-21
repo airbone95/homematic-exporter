@@ -37,6 +37,9 @@ except (TypeError, KeyError):
 
 DEVICES = {}
 METRICS = {}
+SKIP = {
+  "HmIP-PS-2": [3,4,5]
+}
 
 def convert_metric(metric):
     if metric in ["true","false"]:
@@ -71,14 +74,19 @@ def get_metrics():
         ise_id = device.attrib['ise_id']
         if ise_id not in DEVICES:
             continue
+        dev = DEVICES[ise_id]
+        #print(device.attrib['name'])
         for channel in device:
+            if dev['type'] in SKIP and int(channel.attrib['index']) in SKIP[dev['type']]:
+                continue
+            #print("- " + channel.attrib['name'])
             for datapoint in channel:
-                dev = DEVICES[ise_id]
                 metric_name = findall("^.*\.([A-Z_]+)$", datapoint.attrib['name'])[0].lower()
                 metric_value = convert_metric(datapoint.attrib['value'])
 
                 if metric_value == "":
                     continue
+                #print("-- " + datapoint.attrib['name'] + ": " + str(metric_value))
 
                 if metric_name not in METRICS:
                     METRICS[metric_name] = Gauge("homematic_" + metric_name, get_description(metric_name), ["device_name","device_type","device_interface"])
