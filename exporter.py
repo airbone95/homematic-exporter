@@ -41,6 +41,10 @@ SKIP = {
   "HmIP-PS-2": [3,4,5]
 }
 
+def debug(msg):
+    if "DEBUG" in environ and environ['DEBUG']: 
+        print(msg)
+
 def convert_metric(metric):
     if metric in ["true","false"]:
         return int(metric == "true")
@@ -75,26 +79,29 @@ def get_metrics():
         if ise_id not in DEVICES:
             continue
         dev = DEVICES[ise_id]
-        #print(device.attrib['name'])
+        debug(device.attrib['name'])
         for channel in device:
             if dev['type'] in SKIP and int(channel.attrib['index']) in SKIP[dev['type']]:
                 continue
-            #print("- " + channel.attrib['name'])
+            debug("- " + channel.attrib['name'])
             for datapoint in channel:
                 metric_name = findall("^.*\.([A-Z_]+)$", datapoint.attrib['name'])[0].lower()
                 metric_value = convert_metric(datapoint.attrib['value'])
 
                 if metric_value == "":
                     continue
-                #print("-- " + datapoint.attrib['name'] + ": " + str(metric_value))
+                debug("-- " + datapoint.attrib['name'] + ": " + str(metric_value))
 
                 if metric_name not in METRICS:
-                    METRICS[metric_name] = Gauge("homematic_" + metric_name, get_description(metric_name), ["device_name","device_type","device_interface"])
-                METRICS[metric_name].labels(**dict(
-                    device_type = dev['type'],
-                    device_interface = dev['interface'],
-                    device_name = dev['name']
-                )).set(metric_value)
+                    try:
+                        METRICS[metric_name] = Gauge("homematic_" + metric_name, get_description(metric_name), ["device_name","device_type","device_interface"])
+                        METRICS[metric_name].labels(**dict(
+                            device_type = dev['type'],
+                            device_interface = dev['interface'],
+                            device_name = dev['name']
+                        )).set(metric_value)
+                    except ValueError:
+                        pass
 
 def loop(interval):
     while True:
