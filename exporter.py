@@ -93,15 +93,15 @@ def get_metrics():
                 debug("-- " + datapoint.attrib['name'] + ": " + str(metric_value))
 
                 if metric_name not in METRICS:
-                    try:
-                        METRICS[metric_name] = Gauge("homematic_" + metric_name, get_description(metric_name), ["device_name","device_type","device_interface"])
-                        METRICS[metric_name].labels(**dict(
-                            device_type = dev['type'],
-                            device_interface = dev['interface'],
-                            device_name = dev['name']
-                        )).set(metric_value)
-                    except ValueError:
-                        pass
+                    METRICS[metric_name] = Gauge("homematic_" + metric_name, get_description(metric_name), ["device_name","device_type","device_interface"])
+                try:
+                    METRICS[metric_name].labels(**dict(
+                        device_type = dev['type'],
+                        device_interface = dev['interface'],
+                        device_name = dev['name']
+                    )).set(metric_value)
+                except ValueError:
+                    pass
 
 def loop(interval):
     while True:
