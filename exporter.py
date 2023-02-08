@@ -43,7 +43,7 @@ SKIP = {
 
 def debug(msg):
     if "DEBUG" in environ and environ['DEBUG']: 
-        print(msg)
+        print("DEBUG: " + msg)
 
 def convert_metric(metric):
     if metric in ["true","false"]:
@@ -106,18 +106,26 @@ def get_metrics():
 def loop(interval):
     while True:
         try:
+            debug("starting loop run")
             get_metrics()
+            debug(f"sleeping for {interval}s")
             sleep(interval)
-        except ConnectionError:
-            pass
+        except ConnectionError as err:
+            debug(f"connection error: {err}")
+            debug(f"sleeping {interval}s and retrying...")
+            sleep(interval)
 
 if __name__ == '__main__':
     try:
+        debug(f"trying to start server on port {environ['HOMEMATIC_EXPORTER_PORT']}")
         start_http_server(environ['HOMEMATIC_EXPORTER_PORT'])
     except KeyError:
+        debug("trying to start server on port 8999")
         start_http_server(8999)
 
     try:
+        debug(f"starting loop with interval {environ['HOMEMATIC_POLL_INTERVAL']}s")
         loop(int(environ['HOMEMATIC_POLL_INTERVAL']))
     except KeyError:
+        debug("starting loop with interval 30s")
         loop(30)
