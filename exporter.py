@@ -35,6 +35,11 @@ try:
 except (TypeError, KeyError):
     VERIFY = True
 
+if "HOMEMATIC_TOKEN" in environ:
+    SESSION = "?sid=" + environ['HOMEMATIC_TOKEN']
+else:
+    SESSION = ""
+
 DEVICES = {}
 METRICS = {}
 SKIP = {
@@ -57,7 +62,7 @@ def get_description(name):
         return name
 
 def get_metrics():
-    r = get(environ['HOMEMATIC_CCU_URL'] + "/addons/xmlapi/devicelist.cgi", verify = VERIFY)
+    r = get(environ['HOMEMATIC_CCU_URL'] + "/addons/xmlapi/devicelist.cgi" + SESSION, verify = VERIFY)
     xmldata = r.text
     tree = xmlfromstring(xmldata)
 
@@ -71,7 +76,7 @@ def get_metrics():
             interface = device['interface']
         )
 
-    r = get(environ['HOMEMATIC_CCU_URL'] + "/addons/xmlapi/statelist.cgi", verify = VERIFY)
+    r = get(environ['HOMEMATIC_CCU_URL'] + "/addons/xmlapi/statelist.cgi" + SESSION, verify = VERIFY)
     xmldata = r.text
     tree = xmlfromstring(xmldata)
     for device in tree:
